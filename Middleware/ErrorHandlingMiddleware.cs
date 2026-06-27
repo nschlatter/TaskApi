@@ -1,42 +1,43 @@
 using System.Net;
 using System.Text.Json;
 
-namespace TaskApi.Middleware;
-
-public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+namespace TaskApi.Middleware
 {
-    public async Task InvokeAsync(HttpContext context)
+    public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
-        try
+        public async Task InvokeAsync(HttpContext context)
         {
-            await next(context);
+            try
+            {
+                await next(context);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+                await HandleExceptionAsync(context, ex);
+            }
         }
-        catch (Exception ex)
+
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex);
+            var (statusCode, message) = exception switch
+            {
+                ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
+                KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message),
+                _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
+            };
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)statusCode;
+
+            var response = JsonSerializer.Serialize(new
+            {
+                error = message,
+                statusCode = (int)statusCode,
+                timestamp = DateTime.UtcNow
+            });
+
+            return context.Response.WriteAsync(response);
         }
-    }
-
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
-        var (statusCode, message) = exception switch
-        {
-            ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
-            KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
-        };
-
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)statusCode;
-
-        var response = JsonSerializer.Serialize(new
-        {
-            error = message,
-            statusCode = (int)statusCode,
-            timestamp = DateTime.UtcNow
-        });
-
-        return context.Response.WriteAsync(response);
     }
 }
