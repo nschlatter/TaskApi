@@ -12,6 +12,7 @@ public class TaskServiceTests
     [Fact]
     public async Task CreateAsync_AddsTaskAndReturnsDto()
     {
+        // Arrange
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
@@ -27,8 +28,10 @@ public class TaskServiceTests
             DueDate = DateTime.UtcNow.AddDays(1)
         };
 
+        // Act
         var result = await service.CreateAsync(createDto);
-
+        
+        // Assert
         Assert.NotNull(result);
         Assert.Equal(createDto.Title, result.Title);
         Assert.Equal("Low", result.Priority);
