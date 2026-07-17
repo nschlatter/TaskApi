@@ -480,3 +480,14 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Ignore all SQLite database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Ignore SQLite temporary files
+*.sqlite-journal
+*.db-journal
+*.db.shm
+*.db-wal
