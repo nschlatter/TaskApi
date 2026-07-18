@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../TaskApi.Tests/TaskApi.Tests.csproj" Id="eb493f42-baca-40cc-8dd9-15f548197f9a" />
+  <Project Path="TaskApi.csproj" />
+</Solution>
